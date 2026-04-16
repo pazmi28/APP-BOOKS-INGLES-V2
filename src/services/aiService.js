@@ -8,7 +8,7 @@
 // aistudio.google.com → Get API key (gratuita, sin tarjeta)
 const GEMINI_API_KEY = "AIzaSyCErkmn1Fmw1_59l8AK09gcv8cGWariDeE";
 
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${GEMINI_API_KEY}`;
 
 // ─── Prompt maestro ───────────────────────────────────────────────────────────
 const buildPrompt = (nivelLibro) =>
