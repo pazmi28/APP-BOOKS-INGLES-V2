@@ -18,7 +18,7 @@ async function getGeminiKey() {
   if (!snap.exists()) {
     throw new Error(
       "No se encontró la configuración de Gemini en Firestore. " +
-      "Crea el documento config/gemini con el campo apiKey."
+        "Crea el documento config/gemini con el campo apiKey."
     );
   }
   const key = snap.data()?.apiKey;
@@ -32,13 +32,16 @@ async function getGeminiKey() {
 }
 
 // ─── Prompt maestro ───────────────────────────────────────────────────────────
-const buildPrompt = (nivelLibro) => `
+const buildPrompt = (nivelLibro) =>
+  `
 Eres un asistente de aprendizaje de inglés. Analizarás la imagen de una página de un libro de texto de inglés.
 
 Tu tarea es:
 1. EXTRAER todo el texto en inglés que aparece en la imagen (OCR). Incluye títulos, párrafos, ejercicios, diálogos — todo el contenido textual. Si hay texto en español (instrucciones del ejercicio, etc.) también inclúyelo tal cual.
 2. TRADUCIR al español el contenido principal en inglés.
-3. GENERAR preguntas de práctica organizadas en tres niveles de dificultad adaptadas al contenido extraído. El nivel del libro es "${nivelLibro || "b1"}".
+3. GENERAR preguntas de práctica organizadas en tres niveles de dificultad adaptadas al contenido extraído. El nivel del libro es "${
+    nivelLibro || "b1"
+  }".
 
 Responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional, sin bloques de código markdown, sin backticks. El JSON debe tener exactamente esta estructura:
 
@@ -78,7 +81,7 @@ Adapta la dificultad: básico = comprensión directa, intermedio = vocabulario e
 // ─── Cliente Gemini ────────────────────────────────────────────────────────────
 async function callGemini(imageBase64, mimeType, nivelLibro) {
   const apiKey = await getGeminiKey();
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
   const body = {
     contents: [
