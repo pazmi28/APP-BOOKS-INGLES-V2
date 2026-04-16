@@ -121,9 +121,11 @@ async function callGemini(imageBase64, mimeType, nivelLibro) {
 
   if (!text) throw new Error("Respuesta vacía de Gemini");
 
-  // Limpiar posibles backticks residuales y parsear JSON
-  const clean = text.replace(/```json|```/g, "").trim();
-  const parsed = JSON.parse(clean);
+  // Extraer el bloque JSON aunque venga con texto extra del modelo (thinking, backticks, etc.)
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match)
+    throw new Error("No se encontró JSON válido en la respuesta de Gemini");
+  const parsed = JSON.parse(match[0]);
   return parsed;
 }
 
