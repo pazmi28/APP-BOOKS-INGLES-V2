@@ -81,7 +81,7 @@ Adapta la dificultad: básico = comprensión directa, intermedio = vocabulario e
 // ─── Cliente Gemini ────────────────────────────────────────────────────────────
 async function callGemini(imageBase64, mimeType, nivelLibro) {
   const apiKey = await getGeminiKey();
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
   const body = {
     contents: [
