@@ -58,7 +58,8 @@
 .libro-card__actions {
   display: flex;
   gap: var(--spacing-xs);
-  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .libro-card__btn {
@@ -73,6 +74,24 @@
 .libro-card__btn:hover {
   background: var(--gray-100);
   border-color: var(--gray-300);
+}
+
+/* Botón Ver páginas — más prominente */
+.libro-card__btn--pages {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--primary-light);
+  padding: 6px 10px;
+  text-align: center;
+}
+
+.libro-card__btn--pages:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
 }
 
 .libro-card__btn--delete:hover {

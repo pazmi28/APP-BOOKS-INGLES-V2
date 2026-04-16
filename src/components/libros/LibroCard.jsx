@@ -1,8 +1,10 @@
 // src/components/libros/LibroCard.jsx
+import { useNavigate } from "react-router-dom";
 import { NIVELES_INGLES } from "../../utils/constants";
 import "./LibroCard.css";
 
 const LibroCard = ({ libro, onEdit, onDelete }) => {
+  const navigate = useNavigate();
   const nivelInfo = NIVELES_INGLES.find((n) => n.id === libro.nivel);
 
   return (
@@ -25,6 +27,14 @@ const LibroCard = ({ libro, onEdit, onDelete }) => {
         </div>
       </div>
       <div className="libro-card__actions">
+        {/* ── NUEVO Sprint 2: botón Ver páginas ── */}
+        <button
+          className="libro-card__btn libro-card__btn--pages"
+          onClick={() => navigate(`/libros/${libro.id}/paginas`)}
+          title="Ver páginas del libro"
+        >
+          📄 Ver páginas
+        </button>
         <button
           className="libro-card__btn libro-card__btn--edit"
           onClick={() => onEdit(libro)}

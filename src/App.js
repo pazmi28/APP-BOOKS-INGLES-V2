@@ -7,6 +7,7 @@ import Layout from "./components/layout/Layout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import LibrosPage from "./pages/LibrosPage";
+import PaginasPage from "./pages/PaginasPage"; // ← NUEVO Sprint 2
 import PracticarPage from "./pages/PracticarPage";
 import HistorialPage from "./pages/HistorialPage";
 import "./styles/global.css";
@@ -38,6 +39,8 @@ function App() {
           >
             <Route index element={<Navigate to="/libros" replace />} />
             <Route path="libros" element={<LibrosPage />} />
+            {/* ── NUEVO Sprint 2: páginas de un libro ── */}
+            <Route path="libros/:libroId/paginas" element={<PaginasPage />} />
             <Route path="practicar" element={<PracticarPage />} />
             <Route path="historial" element={<HistorialPage />} />
           </Route>
