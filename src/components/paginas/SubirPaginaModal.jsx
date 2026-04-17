@@ -53,10 +53,16 @@ Genera exactamente 3 preguntas por nivel (9 en total).
 Tipos válidos: "comprension", "vocabulario", "gramatica".
 Básico = comprensión directa · Intermedio = vocabulario en contexto · Avanzado = análisis gramatical.`;
 
-// ── Validación del JSON pegado ───────────────────────────────────────────────
+// ── Sanitizar y validar el JSON pegado ──────────────────────────────────────
+const sanitizarJSON = (texto) =>
+  texto
+    .replace(/\u201C|\u201D/g, '"')  // comillas dobles tipográficas " " → "
+    .replace(/\u2018|\u2019/g, "'"); // comillas simples tipográficas ' ' → '
+
 const validarJSON = (texto) => {
   try {
-    const match = texto.match(/\{[\s\S]*\}/);
+    const limpio = sanitizarJSON(texto);
+    const match = limpio.match(/\{[\s\S]*\}/);
     if (!match) return { ok: false, error: "No se encontró un objeto JSON válido." };
     const data = JSON.parse(match[0]);
     if (!data.textoOriginal) return { ok: false, error: 'Falta el campo "textoOriginal".' };
@@ -133,7 +139,7 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
     }
   };
 
-  // ── Modo Manual: copiar prompt y procesar JSON ───────────────────────────
+  // ── Modo Manual ──────────────────────────────────────────────────────────
   const handleCopiarPrompt = async () => {
     try {
       await navigator.clipboard.writeText(buildPromptManual(libro.nivel));
@@ -215,7 +221,7 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
           </div>
         )}
 
-        {/* Barra de progreso — solo en modo API */}
+        {/* Barra de progreso — solo en modo API procesando */}
         {modo === MODOS.API && paso !== PASOS.UPLOAD && (
           <div className="spm-progress">
             {["Subir foto", "Procesar con IA", "Revisar y guardar"].map((label, i) => {
@@ -282,21 +288,17 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
           {/* ── MODO MANUAL: Pegar JSON ── */}
           {modo === MODOS.MANUAL && paso === PASOS.UPLOAD && (
             <div className="spm-manual">
-              {/* Instrucciones */}
               <div className="spm-manual__instrucciones">
                 <p className="spm-manual__intro">
-                  Usa <strong>Gemini web</strong> (gratuito) para procesar la imagen y obtén el JSON.
-                  Luego pégalo aquí.
+                  Usa <strong>Gemini web</strong> (gratuito) para procesar la imagen y obtén el JSON. Luego pégalo aquí.
                 </p>
                 <ol className="spm-manual__pasos">
                   <li>Copia el prompt de abajo</li>
-                  <li>Ve a <a href="https://gemini.google.com" target="_blank" rel="noreferrer">gemini.google.com</a> y sube la foto de la página</li>
-                  <li>Pega el prompt y envía</li>
-                  <li>Copia la respuesta JSON y pégala aquí abajo</li>
+                  <li>Ve a <a href="https://gemini.google.com" target="_blank" rel="noreferrer">gemini.google.com</a>, sube la foto de la página y pega el prompt</li>
+                  <li>Copia <strong>toda</strong> la respuesta JSON y pégala abajo</li>
                 </ol>
               </div>
 
-              {/* Prompt copiable */}
               <div className="spm-manual__prompt-box">
                 <div className="spm-manual__prompt-header">
                   <span className="spm-manual__prompt-label">📝 Prompt para Gemini</span>
@@ -310,11 +312,8 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
                 <div className="spm-manual__prompt-text">{promptManual}</div>
               </div>
 
-              {/* Área JSON */}
               <div className="spm-manual__json-area">
-                <label className="spm-manual__json-label">
-                  📥 Pega aquí el JSON de Gemini
-                </label>
+                <label className="spm-manual__json-label">📥 Pega aquí el JSON de Gemini</label>
                 <textarea
                   className="spm-manual__textarea"
                   placeholder='{ "textoOriginal": "...", "traduccion": "...", "preguntas": { ... } }'
@@ -328,7 +327,7 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
             </div>
           )}
 
-          {/* ── PREVIEW (compartido API y Manual) ── */}
+          {/* ── PREVIEW compartido ── */}
           {paso === PASOS.PREVIEW && resultado && (
             <div className="spm-preview">
               <div className="spm-section">
