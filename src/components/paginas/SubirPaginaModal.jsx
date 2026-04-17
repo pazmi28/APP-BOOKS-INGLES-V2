@@ -96,6 +96,8 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
   const [resultado, setResultado] = useState(null);
   const [error, setError] = useState(null);
   const [tabActivo, setTabActivo] = useState("basico");
+  const [textoEditado, setTextoEditado] = useState("");
+  const [traduccionEditada, setTraduccionEditada] = useState("");
 
   const isBusy = paso === PASOS.PROCESANDO || paso === PASOS.GUARDANDO;
 
@@ -132,6 +134,8 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
     try {
       const data = await procesarPagina(imageBase64, imageMime, libro.nivel);
       setResultado(data);
+      setTextoEditado(data.textoOriginal);
+      setTraduccionEditada(data.traduccion);
       setPaso(PASOS.PREVIEW);
     } catch (err) {
       setError(err.message || "Error al procesar la imagen con IA. Inténtalo de nuevo.");
@@ -155,6 +159,8 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
     const { ok, data, error: err } = validarJSON(jsonTexto);
     if (!ok) { setError(err); return; }
     setResultado(data);
+    setTextoEditado(data.textoOriginal);
+    setTraduccionEditada(data.traduccion);
     setPaso(PASOS.PREVIEW);
   };
 
@@ -163,8 +169,8 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
     setPaso(PASOS.GUARDANDO);
     await onSave({
       numero: numeroPagina,
-      textoOriginal: resultado.textoOriginal,
-      traduccion: resultado.traduccion,
+      textoOriginal: textoEditado || resultado.textoOriginal,
+      traduccion: traduccionEditada || resultado.traduccion,
       preguntas: resultado.preguntas,
     });
   };
@@ -175,6 +181,8 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
     setImageBase64(null);
     setImageMime(null);
     setJsonTexto("");
+    setTextoEditado("");
+    setTraduccionEditada("");
     setError(null);
     setPaso(PASOS.UPLOAD);
   };
@@ -331,12 +339,30 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
           {paso === PASOS.PREVIEW && resultado && (
             <div className="spm-preview">
               <div className="spm-section">
-                <h3 className="spm-section__title">📄 Texto extraído</h3>
-                <div className="spm-text-box spm-text-box--english">{resultado.textoOriginal}</div>
+                <h3 className="spm-section__title">
+                  📄 Texto extraído
+                  <span className="spm-section__editable-hint">✏️ editable</span>
+                </h3>
+                <textarea
+                  className="spm-text-box spm-text-box--english spm-text-editable"
+                  value={textoEditado}
+                  onChange={(e) => setTextoEditado(e.target.value)}
+                  rows={5}
+                  spellCheck={false}
+                />
               </div>
               <div className="spm-section">
-                <h3 className="spm-section__title">🌐 Traducción al español</h3>
-                <div className="spm-text-box spm-text-box--spanish">{resultado.traduccion}</div>
+                <h3 className="spm-section__title">
+                  🌐 Traducción al español
+                  <span className="spm-section__editable-hint">✏️ editable</span>
+                </h3>
+                <textarea
+                  className="spm-text-box spm-text-box--spanish spm-text-editable"
+                  value={traduccionEditada}
+                  onChange={(e) => setTraduccionEditada(e.target.value)}
+                  rows={5}
+                  spellCheck={false}
+                />
               </div>
               <div className="spm-section">
                 <h3 className="spm-section__title">❓ Preguntas generadas</h3>
