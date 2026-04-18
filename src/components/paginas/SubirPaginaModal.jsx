@@ -331,6 +331,10 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
                   onChange={(e) => { setJsonTexto(e.target.value); setError(null); }}
                   rows={8}
                   spellCheck={false}
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  autoComplete="off"
+                  data-gramm="false"
                 />
                 {error && <p className="spm-error">{error}</p>}
               </div>
