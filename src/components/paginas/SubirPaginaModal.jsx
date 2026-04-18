@@ -23,9 +23,7 @@ const buildPromptManual = (nivelLibro) =>
 Tu tarea es:
 1. EXTRAER todo el texto en inglés que aparece en la imagen (OCR). Incluye títulos, párrafos, ejercicios y diálogos. Si hay texto en español, inclúyelo tal cual.
 2. TRADUCIR al español el contenido principal en inglés.
-3. GENERAR preguntas de práctica en tres niveles de dificultad adaptadas al contenido. El nivel del libro es "${
-    nivelLibro || "b1"
-  }".
+3. GENERAR preguntas de práctica en tres niveles de dificultad adaptadas al contenido. El nivel del libro es "${nivelLibro || "b1"}".
 
 Responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional, sin backticks ni bloques de código. Usa exactamente esta estructura:
 
@@ -57,35 +55,27 @@ Básico = comprensión directa · Intermedio = vocabulario en contexto · Avanza
 
 // ── Sanitizar y validar el JSON pegado ──────────────────────────────────────
 const sanitizarJSON = (texto) =>
+  // Las comillas tipográficas " " dentro de valores JSON deben escaparse como \"
+  // Las simples ' ' se convierten a ' sin problema
   texto
-    .replace(/\u201C|\u201D/g, '"') // comillas dobles tipográficas " " → "
-    .replace(/\u2018|\u2019/g, "'"); // comillas simples tipográficas ' ' → '
+    .replace(/\u201C|\u201D/g, '\\"') // " " → \" (escapadas para JSON)
+    .replace(/\u2018|\u2019/g, "'");    // ' ' → '
 
 const validarJSON = (texto) => {
   try {
     const limpio = sanitizarJSON(texto);
     const match = limpio.match(/\{[\s\S]*\}/);
-    if (!match)
-      return { ok: false, error: "No se encontró un objeto JSON válido." };
+    if (!match) return { ok: false, error: "No se encontró un objeto JSON válido." };
     const data = JSON.parse(match[0]);
-    if (!data.textoOriginal)
-      return { ok: false, error: 'Falta el campo "textoOriginal".' };
-    if (!data.traduccion)
-      return { ok: false, error: 'Falta el campo "traduccion".' };
-    if (!data.preguntas)
-      return { ok: false, error: 'Falta el campo "preguntas".' };
-    if (!data.preguntas.basico?.length)
-      return { ok: false, error: 'Falta "preguntas.basico" o está vacío.' };
-    if (!data.preguntas.intermedio?.length)
-      return { ok: false, error: 'Falta "preguntas.intermedio" o está vacío.' };
-    if (!data.preguntas.avanzado?.length)
-      return { ok: false, error: 'Falta "preguntas.avanzado" o está vacío.' };
+    if (!data.textoOriginal) return { ok: false, error: 'Falta el campo "textoOriginal".' };
+    if (!data.traduccion) return { ok: false, error: 'Falta el campo "traduccion".' };
+    if (!data.preguntas) return { ok: false, error: 'Falta el campo "preguntas".' };
+    if (!data.preguntas.basico?.length) return { ok: false, error: 'Falta "preguntas.basico" o está vacío.' };
+    if (!data.preguntas.intermedio?.length) return { ok: false, error: 'Falta "preguntas.intermedio" o está vacío.' };
+    if (!data.preguntas.avanzado?.length) return { ok: false, error: 'Falta "preguntas.avanzado" o está vacío.' };
     return { ok: true, data };
   } catch {
-    return {
-      ok: false,
-      error: "JSON inválido. Revisa que no falten llaves o comillas.",
-    };
+    return { ok: false, error: "JSON inválido. Revisa que no falten llaves o comillas." };
   }
 };
 
@@ -137,11 +127,7 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
   };
 
   const handleFileChange = (e) => procesarImagen(e.target.files[0]);
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setDragOver(false);
-    procesarImagen(e.dataTransfer.files[0]);
-  };
+  const handleDrop = (e) => { e.preventDefault(); setDragOver(false); procesarImagen(e.dataTransfer.files[0]); };
 
   const handleProcesarAPI = async () => {
     if (!imageBase64) return;
@@ -154,9 +140,7 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
       setTraduccionEditada(data.traduccion);
       setPaso(PASOS.PREVIEW);
     } catch (err) {
-      setError(
-        err.message || "Error al procesar la imagen con IA. Inténtalo de nuevo."
-      );
+      setError(err.message || "Error al procesar la imagen con IA. Inténtalo de nuevo.");
       setPaso(PASOS.UPLOAD);
     }
   };
@@ -175,10 +159,7 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
   const handleProcesarManual = () => {
     setError(null);
     const { ok, data, error: err } = validarJSON(jsonTexto);
-    if (!ok) {
-      setError(err);
-      return;
-    }
+    if (!ok) { setError(err); return; }
     setResultado(data);
     setTextoEditado(data.textoOriginal);
     setTraduccionEditada(data.traduccion);
@@ -222,34 +203,27 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal spm-modal" onClick={(e) => e.stopPropagation()}>
+
         {/* Header */}
         <div className="modal__header">
           <div>
-            <h2 className="modal__title">
-              {libro.portadaEmoji} Añadir página {numeroPagina}
-            </h2>
+            <h2 className="modal__title">{libro.portadaEmoji} Añadir página {numeroPagina}</h2>
             <p className="spm-subtitle">{libro.nombre}</p>
           </div>
-          <button className="modal__close" onClick={onClose} disabled={isBusy}>
-            ✕
-          </button>
+          <button className="modal__close" onClick={onClose} disabled={isBusy}>✕</button>
         </div>
 
         {/* Selector de modo — solo visible en paso UPLOAD */}
         {paso === PASOS.UPLOAD && (
           <div className="spm-modo-selector">
             <button
-              className={`spm-modo-btn ${
-                modo === MODOS.API ? "spm-modo-btn--active" : ""
-              }`}
+              className={`spm-modo-btn ${modo === MODOS.API ? "spm-modo-btn--active" : ""}`}
               onClick={() => handleCambiarModo(MODOS.API)}
             >
               📷 Procesar con API
             </button>
             <button
-              className={`spm-modo-btn ${
-                modo === MODOS.MANUAL ? "spm-modo-btn--active" : ""
-              }`}
+              className={`spm-modo-btn ${modo === MODOS.MANUAL ? "spm-modo-btn--active" : ""}`}
               onClick={() => handleCambiarModo(MODOS.MANUAL)}
             >
               📋 Pegar JSON manual
@@ -260,84 +234,46 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
         {/* Barra de progreso — solo en modo API procesando */}
         {modo === MODOS.API && paso !== PASOS.UPLOAD && (
           <div className="spm-progress">
-            {["Subir foto", "Procesar con IA", "Revisar y guardar"].map(
-              (label, i) => {
-                const pasoIdx = [
-                  PASOS.UPLOAD,
-                  PASOS.PROCESANDO,
-                  PASOS.PREVIEW,
-                ].indexOf(paso);
-                const done = i < pasoIdx || paso === PASOS.GUARDANDO;
-                const active = i === pasoIdx;
-                return (
-                  <div
-                    key={label}
-                    className={`spm-progress__step ${
-                      done ? "spm-progress__step--done" : ""
-                    } ${active ? "spm-progress__step--active" : ""}`}
-                  >
-                    <div className="spm-progress__dot">
-                      {done ? "✓" : i + 1}
-                    </div>
-                    <span>{label}</span>
-                  </div>
-                );
-              }
-            )}
+            {["Subir foto", "Procesar con IA", "Revisar y guardar"].map((label, i) => {
+              const pasoIdx = [PASOS.UPLOAD, PASOS.PROCESANDO, PASOS.PREVIEW].indexOf(paso);
+              const done = i < pasoIdx || paso === PASOS.GUARDANDO;
+              const active = i === pasoIdx;
+              return (
+                <div key={label} className={`spm-progress__step ${done ? "spm-progress__step--done" : ""} ${active ? "spm-progress__step--active" : ""}`}>
+                  <div className="spm-progress__dot">{done ? "✓" : i + 1}</div>
+                  <span>{label}</span>
+                </div>
+              );
+            })}
           </div>
         )}
 
         {/* Body */}
         <div className="modal__body spm-body">
+
           {/* ── MODO API: Upload ── */}
           {modo === MODOS.API && paso === PASOS.UPLOAD && (
             <div className="spm-upload">
               <div
-                className={`spm-dropzone ${
-                  dragOver ? "spm-dropzone--over" : ""
-                } ${imagePreview ? "spm-dropzone--has-image" : ""}`}
+                className={`spm-dropzone ${dragOver ? "spm-dropzone--over" : ""} ${imagePreview ? "spm-dropzone--has-image" : ""}`}
                 onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver(true);
-                }}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
               >
                 {imagePreview ? (
-                  <img
-                    src={imagePreview}
-                    alt="Página a procesar"
-                    className="spm-preview-img"
-                  />
+                  <img src={imagePreview} alt="Página a procesar" className="spm-preview-img" />
                 ) : (
                   <div className="spm-dropzone__placeholder">
                     <div className="spm-dropzone__icon">📷</div>
-                    <p className="spm-dropzone__text">
-                      Arrastra la foto aquí o{" "}
-                      <span>haz clic para seleccionar</span>
-                    </p>
-                    <p className="spm-dropzone__hint">
-                      JPG, PNG o WebP · máx. 10 MB
-                    </p>
+                    <p className="spm-dropzone__text">Arrastra la foto aquí o <span>haz clic para seleccionar</span></p>
+                    <p className="spm-dropzone__hint">JPG, PNG o WebP · máx. 10 MB</p>
                   </div>
                 )}
               </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleFileChange}
-                style={{ display: "none" }}
-              />
+              <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} style={{ display: "none" }} />
               {imagePreview && (
-                <button
-                  className="spm-btn-change"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    fileInputRef.current?.click();
-                  }}
-                >
+                <button className="spm-btn-change" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
                   🔄 Cambiar imagen
                 </button>
               )}
@@ -348,21 +284,13 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
           {/* ── MODO API: Procesando ── */}
           {modo === MODOS.API && paso === PASOS.PROCESANDO && (
             <div className="spm-procesando">
-              <div className="spm-procesando__spinner">
-                <div className="spm-spinner" />
-              </div>
+              <div className="spm-procesando__spinner"><div className="spm-spinner" /></div>
               <h3>Procesando con IA…</h3>
               <p>Extrayendo texto, traduciendo y generando preguntas</p>
               <div className="spm-procesando__steps">
-                <div className="spm-procesando__step spm-procesando__step--active">
-                  🔍 Leyendo la imagen (OCR)
-                </div>
-                <div className="spm-procesando__step">
-                  🌐 Traduciendo al español
-                </div>
-                <div className="spm-procesando__step">
-                  ❓ Generando preguntas MCER
-                </div>
+                <div className="spm-procesando__step spm-procesando__step--active">🔍 Leyendo la imagen (OCR)</div>
+                <div className="spm-procesando__step">🌐 Traduciendo al español</div>
+                <div className="spm-procesando__step">❓ Generando preguntas MCER</div>
               </div>
             </div>
           )}
@@ -372,37 +300,20 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
             <div className="spm-manual">
               <div className="spm-manual__instrucciones">
                 <p className="spm-manual__intro">
-                  Usa <strong>Gemini web</strong> (gratuito) para procesar la
-                  imagen y obtén el JSON. Luego pégalo aquí.
+                  Usa <strong>Gemini web</strong> (gratuito) para procesar la imagen y obtén el JSON. Luego pégalo aquí.
                 </p>
                 <ol className="spm-manual__pasos">
                   <li>Copia el prompt de abajo</li>
-                  <li>
-                    Ve a{" "}
-                    <a
-                      href="https://gemini.google.com"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      gemini.google.com
-                    </a>
-                    , sube la foto de la página y pega el prompt
-                  </li>
-                  <li>
-                    Copia <strong>toda</strong> la respuesta JSON y pégala abajo
-                  </li>
+                  <li>Ve a <a href="https://gemini.google.com" target="_blank" rel="noreferrer">gemini.google.com</a>, sube la foto de la página y pega el prompt</li>
+                  <li>Copia <strong>toda</strong> la respuesta JSON y pégala abajo</li>
                 </ol>
               </div>
 
               <div className="spm-manual__prompt-box">
                 <div className="spm-manual__prompt-header">
-                  <span className="spm-manual__prompt-label">
-                    📝 Prompt para Gemini
-                  </span>
+                  <span className="spm-manual__prompt-label">📝 Prompt para Gemini</span>
                   <button
-                    className={`spm-manual__copy-btn ${
-                      promptCopiado ? "spm-manual__copy-btn--done" : ""
-                    }`}
+                    className={`spm-manual__copy-btn ${promptCopiado ? "spm-manual__copy-btn--done" : ""}`}
                     onClick={handleCopiarPrompt}
                   >
                     {promptCopiado ? "✅ Copiado" : "📋 Copiar prompt"}
@@ -412,17 +323,12 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
               </div>
 
               <div className="spm-manual__json-area">
-                <label className="spm-manual__json-label">
-                  📥 Pega aquí el JSON de Gemini
-                </label>
+                <label className="spm-manual__json-label">📥 Pega aquí el JSON de Gemini</label>
                 <textarea
                   className="spm-manual__textarea"
                   placeholder='{ "textoOriginal": "...", "traduccion": "...", "preguntas": { ... } }'
                   value={jsonTexto}
-                  onChange={(e) => {
-                    setJsonTexto(e.target.value);
-                    setError(null);
-                  }}
+                  onChange={(e) => { setJsonTexto(e.target.value); setError(null); }}
                   rows={8}
                   spellCheck={false}
                 />
@@ -437,9 +343,7 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
               <div className="spm-section">
                 <h3 className="spm-section__title">
                   📄 Texto extraído
-                  <span className="spm-section__editable-hint">
-                    ✏️ editable
-                  </span>
+                  <span className="spm-section__editable-hint">✏️ editable</span>
                 </h3>
                 <textarea
                   className="spm-text-box spm-text-box--english spm-text-editable"
@@ -452,9 +356,7 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
               <div className="spm-section">
                 <h3 className="spm-section__title">
                   🌐 Traducción al español
-                  <span className="spm-section__editable-hint">
-                    ✏️ editable
-                  </span>
+                  <span className="spm-section__editable-hint">✏️ editable</span>
                 </h3>
                 <textarea
                   className="spm-text-box spm-text-box--spanish spm-text-editable"
@@ -470,15 +372,11 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
                   {GRUPOS_NIVEL.map((g) => (
                     <button
                       key={g.id}
-                      className={`spm-tab spm-tab--${g.id} ${
-                        tabActivo === g.id ? "spm-tab--active" : ""
-                      }`}
+                      className={`spm-tab spm-tab--${g.id} ${tabActivo === g.id ? "spm-tab--active" : ""}`}
                       onClick={() => setTabActivo(g.id)}
                     >
                       {g.label}
-                      <span className="spm-tab__count">
-                        {resultado.preguntas?.[g.id]?.length || 0}
-                      </span>
+                      <span className="spm-tab__count">{resultado.preguntas?.[g.id]?.length || 0}</span>
                     </button>
                   ))}
                 </div>
@@ -487,16 +385,10 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
                     <div key={i} className="spm-pregunta">
                       <div className="spm-pregunta__header">
                         <span className="spm-pregunta__num">{i + 1}</span>
-                        <span className="spm-pregunta__tipo">
-                          {TIPOS_PREGUNTA_LABEL[p.tipo] || p.tipo}
-                        </span>
+                        <span className="spm-pregunta__tipo">{TIPOS_PREGUNTA_LABEL[p.tipo] || p.tipo}</span>
                       </div>
                       <p className="spm-pregunta__texto">{p.pregunta}</p>
-                      {p.respuestaSugerida && (
-                        <p className="spm-pregunta__respuesta">
-                          💡 {p.respuestaSugerida}
-                        </p>
-                      )}
+                      {p.respuestaSugerida && <p className="spm-pregunta__respuesta">💡 {p.respuestaSugerida}</p>}
                     </div>
                   ))}
                 </div>
@@ -507,9 +399,7 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
           {/* ── Guardando ── */}
           {paso === PASOS.GUARDANDO && (
             <div className="spm-procesando">
-              <div className="spm-procesando__spinner">
-                <div className="spm-spinner" />
-              </div>
+              <div className="spm-procesando__spinner"><div className="spm-spinner" /></div>
               <h3>Guardando en Firebase…</h3>
             </div>
           )}
@@ -519,28 +409,16 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
         <div className="modal__footer spm-footer">
           {paso === PASOS.UPLOAD && modo === MODOS.API && (
             <>
-              <button className="btn-secondary" onClick={onClose}>
-                Cancelar
-              </button>
-              <button
-                className="btn-primary"
-                onClick={handleProcesarAPI}
-                disabled={!imageBase64}
-              >
+              <button className="btn-secondary" onClick={onClose}>Cancelar</button>
+              <button className="btn-primary" onClick={handleProcesarAPI} disabled={!imageBase64}>
                 🤖 Procesar con IA
               </button>
             </>
           )}
           {paso === PASOS.UPLOAD && modo === MODOS.MANUAL && (
             <>
-              <button className="btn-secondary" onClick={onClose}>
-                Cancelar
-              </button>
-              <button
-                className="btn-primary"
-                onClick={handleProcesarManual}
-                disabled={!jsonTexto.trim()}
-              >
+              <button className="btn-secondary" onClick={onClose}>Cancelar</button>
+              <button className="btn-primary" onClick={handleProcesarManual} disabled={!jsonTexto.trim()}>
                 ✅ Verificar y previsualizar
               </button>
             </>
@@ -548,10 +426,7 @@ const SubirPaginaModal = ({ libro, numeroPagina, onSave, onClose }) => {
           {paso === PASOS.PREVIEW && (
             <>
               <button className="btn-secondary" onClick={handleReintentar}>
-                🔄{" "}
-                {modo === MODOS.API
-                  ? "Repetir con otra foto"
-                  : "Volver a pegar"}
+                🔄 {modo === MODOS.API ? "Repetir con otra foto" : "Volver a pegar"}
               </button>
               <button className="btn-primary" onClick={handleGuardar}>
                 💾 Guardar página
